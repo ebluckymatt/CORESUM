@@ -1,0 +1,12 @@
+node_modules
+.next
+.env
+.env.local
+coverage
+*.log
+prisma/dev.db
+.vercel
+.tools
+.playwright-cli
+test-results
+*.tsbuildinfo

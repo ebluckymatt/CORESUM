@@ -1,0 +1,677 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ProjectHealth {
+  GREEN
+  AMBER
+  RED
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum Severity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum ActionStatus {
+  Open
+  InProgress
+  AwaitingVerification
+  Closed
+  Overdue
+}
+
+enum IssueStatus {
+  Open
+  UnderReview
+  Escalated
+  RecoveryActive
+  Closed
+}
+
+enum RiskStatus {
+  Identified
+  Assessed
+  Mitigating
+  Triggered
+  Closed
+  Converted
+}
+
+enum InspectionStatus {
+  Draft
+  Open
+  Assigned
+  ReadyForVerification
+  VerifiedClosed
+  Rejected
+}
+
+enum EngineeringRequestStatus {
+  Submitted
+  InReview
+  WaitingOnInfo
+  Responded
+  Implemented
+  Closed
+}
+
+enum SubmittalStatus {
+  Draft
+  Submitted
+  InReview
+  Approved
+  ReviseAndResubmit
+  Superseded
+}
+
+enum ApprovalStatus {
+  Pending
+  Approved
+  Rejected
+}
+
+enum ReportType {
+  DAILY
+  WEEKLY
+  EXECUTIVE
+}
+
+enum RecordType {
+  Project
+  Stakeholder
+  Asset
+  ChecklistTemplate
+  ChecklistRun
+  WbsItem
+  Milestone
+  Deliverable
+  ActionItem
+  Issue
+  Risk
+  Escalation
+  Meeting
+  Decision
+  QualityRequirement
+  Inspection
+  Finding
+  Deficiency
+  EngineeringRequest
+  Document
+  Submittal
+  Revision
+  Approval
+  Report
+  LessonLearned
+}
+
+enum ChecklistExecutionStatus {
+  Draft
+  InProgress
+  Complete
+  Failed
+  Approved
+  Rejected
+}
+
+model User {
+  id            String               @id @default(cuid())
+  name          String
+  email         String               @unique
+  passwordHash  String?
+  title         String?
+  isActive      Boolean              @default(true)
+  companyId     String?
+  company       Company?             @relation(fields: [companyId], references: [id])
+  memberships   ProjectMembership[]
+  ownedActions  ActionItem[]         @relation("ActionOwner")
+  ownedIssues   Issue[]              @relation("IssueOwner")
+  ownedRisks    Risk[]               @relation("RiskOwner")
+  approvals     Approval[]           @relation("ApprovalReviewer")
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
+}
+
+model Role {
+  id          String              @id @default(cuid())
+  name        String              @unique
+  description String?
+  memberships ProjectMembership[]
+}
+
+model Company {
+  id          String              @id @default(cuid())
+  name        String              @unique
+  type        String?
+  users       User[]
+  members     ProjectMembership[]
+}
+
+model Project {
+  id                  String                  @id @default(cuid())
+  code                String                  @unique
+  name                String
+  sponsor             String?
+  manager             String?
+  objective           String?
+  businessNeed        String?
+  scope               String?
+  phase               String?
+  health              ProjectHealth           @default(AMBER)
+  startDate           DateTime?
+  targetFinishDate    DateTime?
+  memberships         ProjectMembership[]
+  stakeholders        Stakeholder[]
+  communicationPlan   CommunicationPlanEntry[]
+  areas               Area[]
+  disciplines         Discipline[]
+  systems             SystemTag[]
+  assets              Asset[]
+  checklistTemplates  ChecklistTemplate[]
+  checklistRuns       ChecklistRun[]
+  wbsItems            WbsItem[]
+  milestones          Milestone[]
+  deliverables        Deliverable[]
+  actions             ActionItem[]
+  issues              Issue[]
+  risks               Risk[]
+  escalations         Escalation[]
+  meetings            Meeting[]
+  decisions           Decision[]
+  qualityRequirements QualityRequirement[]
+  inspections         Inspection[]
+  findings            Finding[]
+  deficiencies        Deficiency[]
+  engineeringRequests EngineeringRequest[]
+  documents           Document[]
+  submittals          Submittal[]
+  revisions           Revision[]
+  approvals           Approval[]
+  reports             Report[]
+  lessonsLearned      LessonLearned[]
+  attachments         Attachment[]
+  comments            Comment[]
+  statusHistory       StatusHistory[]
+  createdAt           DateTime                @default(now())
+  updatedAt           DateTime                @updatedAt
+}
+
+model ProjectMembership {
+  id         String   @id @default(cuid())
+  projectId  String
+  userId     String
+  roleId     String
+  companyId  String?
+  canApprove Boolean  @default(false)
+  project    Project  @relation(fields: [projectId], references: [id])
+  user       User     @relation(fields: [userId], references: [id])
+  role       Role     @relation(fields: [roleId], references: [id])
+  company    Company? @relation(fields: [companyId], references: [id])
+
+  @@unique([projectId, userId, roleId])
+}
+
+model Stakeholder {
+  id                     String  @id @default(cuid())
+  projectId              String
+  name                   String
+  organization           String
+  role                   String
+  responsibility         String?
+  influenceLevel         String?
+  interestLevel          String?
+  communicationMethod    String?
+  communicationFrequency String?
+  contactInformation     String?
+  notes                  String?
+  project                Project @relation(fields: [projectId], references: [id])
+}
+
+model CommunicationPlanEntry {
+  id             String  @id @default(cuid())
+  projectId      String
+  type           String
+  audience       String
+  purpose        String
+  frequency      String
+  owner          String
+  deliveryMethod String
+  deliverable    String?
+  status         String?
+  notes          String?
+  project        Project @relation(fields: [projectId], references: [id])
+}
+
+model Area {
+  id        String  @id @default(cuid())
+  projectId String
+  name      String
+  project   Project @relation(fields: [projectId], references: [id])
+}
+
+model Discipline {
+  id        String  @id @default(cuid())
+  projectId String
+  name      String
+  project   Project @relation(fields: [projectId], references: [id])
+}
+
+model SystemTag {
+  id        String  @id @default(cuid())
+  projectId String
+  name      String
+  project   Project @relation(fields: [projectId], references: [id])
+}
+
+model Asset {
+  id                   String         @id @default(cuid())
+  projectId            String
+  assetTag             String
+  name                 String
+  equipmentType        String
+  area                 String?
+  discipline           String?
+  system               String?
+  clientStatusScheme   String?
+  ashraeLevel          String?
+  status               String
+  responsibleCompanyId String?
+  ownerUserId          String?
+  notes                String?
+  project              Project        @relation(fields: [projectId], references: [id])
+  checklistRuns        ChecklistRun[]
+
+  @@unique([projectId, assetTag])
+}
+
+model ChecklistTemplate {
+  id                  String         @id @default(cuid())
+  projectId           String
+  name                String
+  equipmentType       String
+  category            String?
+  statusScheme        String?
+  ashraeLevel         String?
+  triggerStage        String?
+  requiredRole        String?
+  passStatus          String?
+  failStatus          String?
+  warningStatus       String?
+  checklistRuns       ChecklistRun[]
+  project             Project        @relation(fields: [projectId], references: [id])
+}
+
+model ChecklistRun {
+  id                   String                   @id @default(cuid())
+  projectId            String
+  assetId              String
+  checklistTemplateId  String
+  inspectionId         String?
+  executedByUserId     String?
+  status               ChecklistExecutionStatus @default(Draft)
+  resultingAssetStatus String?
+  score                Int?
+  completedAt          DateTime?
+  notes                String?
+  project              Project                  @relation(fields: [projectId], references: [id])
+  asset                Asset                    @relation(fields: [assetId], references: [id])
+  checklistTemplate    ChecklistTemplate        @relation(fields: [checklistTemplateId], references: [id])
+}
+
+model WbsItem {
+  id                     String   @id @default(cuid())
+  projectId              String
+  parentId               String?
+  code                   String
+  taskName               String
+  description            String?
+  deliverable            String?
+  responsibleStakeholder String?
+  startDate              DateTime?
+  endDate                DateTime?
+  status                 String?
+  percentComplete        Int      @default(0)
+  notes                  String?
+  project                Project  @relation(fields: [projectId], references: [id])
+}
+
+model Milestone {
+  id            String   @id @default(cuid())
+  projectId     String
+  name          String
+  description   String?
+  owner         String?
+  plannedStart  DateTime?
+  plannedFinish DateTime?
+  actualStart   DateTime?
+  actualFinish  DateTime?
+  status        String?
+  project       Project  @relation(fields: [projectId], references: [id])
+}
+
+model Deliverable {
+  id                   String   @id @default(cuid())
+  projectId            String
+  name                 String
+  description          String?
+  ownerUserId          String?
+  responsibleCompanyId String?
+  dueDate              DateTime?
+  status               String
+  project              Project  @relation(fields: [projectId], references: [id])
+}
+
+model ActionItem {
+  id                   String       @id @default(cuid())
+  projectId            String
+  title                String
+  description          String?
+  sourceType           String?
+  sourceId             String?
+  ownerUserId          String?
+  responsibleCompanyId String?
+  status               ActionStatus @default(Open)
+  priority             Priority     @default(MEDIUM)
+  severity             Severity?
+  dueDate              DateTime?
+  closedAt             DateTime?
+  createdById          String?
+  updatedById          String?
+  project              Project      @relation(fields: [projectId], references: [id])
+  owner                User?        @relation("ActionOwner", fields: [ownerUserId], references: [id])
+}
+
+model Issue {
+  id                   String      @id @default(cuid())
+  projectId            String
+  title                String
+  description          String
+  category             String?
+  impact               String?
+  ownerUserId          String?
+  responsibleCompanyId String?
+  status               IssueStatus @default(Open)
+  priority             Priority    @default(HIGH)
+  severity             Severity    @default(MEDIUM)
+  dueDate              DateTime?
+  closedAt             DateTime?
+  createdById          String?
+  updatedById          String?
+  project              Project     @relation(fields: [projectId], references: [id])
+  owner                User?       @relation("IssueOwner", fields: [ownerUserId], references: [id])
+}
+
+model Risk {
+  id                   String     @id @default(cuid())
+  projectId            String
+  title                String
+  description          String
+  category             String?
+  probability          Int        @default(1)
+  impact               Int        @default(1)
+  score                Int        @default(1)
+  mitigation           String?
+  trigger              String?
+  ownerUserId          String?
+  responsibleCompanyId String?
+  status               RiskStatus @default(Identified)
+  priority             Priority   @default(MEDIUM)
+  severity             Severity   @default(MEDIUM)
+  dueDate              DateTime?
+  closedAt             DateTime?
+  createdById          String?
+  updatedById          String?
+  project              Project    @relation(fields: [projectId], references: [id])
+  owner                User?      @relation("RiskOwner", fields: [ownerUserId], references: [id])
+}
+
+model Escalation {
+  id         String     @id @default(cuid())
+  projectId  String
+  recordType RecordType
+  recordId   String
+  reason     String
+  status     String
+  owner      String?
+  dueDate    DateTime?
+  project    Project    @relation(fields: [projectId], references: [id])
+}
+
+model Meeting {
+  id          String   @id @default(cuid())
+  projectId   String
+  title       String
+  meetingDate DateTime
+  attendees   String?
+  notes       String?
+  project     Project  @relation(fields: [projectId], references: [id])
+}
+
+model Decision {
+  id          String   @id @default(cuid())
+  projectId   String
+  meetingId   String?
+  title       String
+  description String
+  owner       String?
+  dueDate     DateTime?
+  status      String
+  project     Project  @relation(fields: [projectId], references: [id])
+}
+
+model QualityRequirement {
+  id                 String   @id @default(cuid())
+  projectId          String
+  requirement        String
+  standardCode       String?
+  inspectionType     String
+  responsibleParty   String?
+  acceptanceCriteria String?
+  verificationMethod String?
+  plannedDate        DateTime?
+  project            Project  @relation(fields: [projectId], references: [id])
+}
+
+model Inspection {
+  id                   String           @id @default(cuid())
+  projectId            String
+  qualityRequirementId String?
+  title                String
+  inspectionType       String
+  area                 String?
+  discipline           String?
+  system               String?
+  ownerUserId          String?
+  responsibleCompanyId String?
+  status               InspectionStatus @default(Draft)
+  dueDate              DateTime?
+  result               String?
+  closedAt             DateTime?
+  createdById          String?
+  updatedById          String?
+  project              Project          @relation(fields: [projectId], references: [id])
+}
+
+model Finding {
+  id                   String           @id @default(cuid())
+  projectId            String
+  inspectionId         String?
+  title                String
+  description          String
+  ownerUserId          String?
+  responsibleCompanyId String?
+  status               InspectionStatus @default(Open)
+  priority             Priority         @default(HIGH)
+  severity             Severity         @default(HIGH)
+  dueDate              DateTime?
+  closedAt             DateTime?
+  createdById          String?
+  updatedById          String?
+  project              Project          @relation(fields: [projectId], references: [id])
+}
+
+model Deficiency {
+  id                   String           @id @default(cuid())
+  projectId            String
+  findingId            String?
+  title                String
+  description          String
+  ownerUserId          String?
+  responsibleCompanyId String?
+  status               InspectionStatus @default(Open)
+  priority             Priority         @default(HIGH)
+  severity             Severity         @default(HIGH)
+  dueDate              DateTime?
+  closedAt             DateTime?
+  createdById          String?
+  updatedById          String?
+  project              Project          @relation(fields: [projectId], references: [id])
+}
+
+model EngineeringRequest {
+  id                   String                   @id @default(cuid())
+  projectId            String
+  title                String
+  description          String
+  discipline           String?
+  ownerUserId          String?
+  responsibleCompanyId String?
+  status               EngineeringRequestStatus @default(Submitted)
+  priority             Priority                 @default(MEDIUM)
+  severity             Severity?
+  dueDate              DateTime?
+  response             String?
+  closedAt             DateTime?
+  createdById          String?
+  updatedById          String?
+  project              Project                  @relation(fields: [projectId], references: [id])
+}
+
+model Document {
+  id           String   @id @default(cuid())
+  projectId    String
+  name         String
+  documentType String
+  discipline   String?
+  version      String?
+  author       String?
+  submittedAt  DateTime?
+  approvedAt   DateTime?
+  storageKey   String?
+  project      Project  @relation(fields: [projectId], references: [id])
+}
+
+model Submittal {
+  id                   String         @id @default(cuid())
+  projectId            String
+  documentId           String?
+  title                String
+  methodOfConstruction String?
+  changeDescription    String?
+  changeType           String?
+  requestedBy          String?
+  impactScope          String?
+  impactSchedule       String?
+  impactCost           String?
+  status               SubmittalStatus @default(Draft)
+  decisionDate         DateTime?
+  notes                String?
+  project              Project        @relation(fields: [projectId], references: [id])
+}
+
+model Revision {
+  id          String   @id @default(cuid())
+  projectId   String
+  submittalId String?
+  number      String
+  summary     String?
+  createdAt   DateTime @default(now())
+  project     Project  @relation(fields: [projectId], references: [id])
+}
+
+model Approval {
+  id         String         @id @default(cuid())
+  projectId  String
+  recordType RecordType
+  recordId   String
+  reviewerId String?
+  status     ApprovalStatus @default(Pending)
+  notes      String?
+  decidedAt  DateTime?
+  project    Project        @relation(fields: [projectId], references: [id])
+  reviewer   User?          @relation("ApprovalReviewer", fields: [reviewerId], references: [id])
+}
+
+model Report {
+  id          String     @id @default(cuid())
+  projectId   String
+  type        ReportType
+  title       String
+  summary     String
+  constraints String?
+  topIssues   String?
+  reportDate  DateTime   @default(now())
+  project     Project    @relation(fields: [projectId], references: [id])
+}
+
+model LessonLearned {
+  id             String   @id @default(cuid())
+  projectId      String
+  phase          String?
+  description    String
+  rootCause      String?
+  impact         String?
+  recommendation String?
+  owner          String?
+  recordedAt     DateTime @default(now())
+  project        Project  @relation(fields: [projectId], references: [id])
+}
+
+model Attachment {
+  id          String     @id @default(cuid())
+  projectId   String
+  recordType  RecordType
+  recordId    String
+  fileName    String
+  contentType String?
+  storageKey  String
+  project     Project    @relation(fields: [projectId], references: [id])
+}
+
+model Comment {
+  id         String     @id @default(cuid())
+  projectId  String
+  recordType RecordType
+  recordId   String
+  body       String
+  authorName String?
+  createdAt  DateTime   @default(now())
+  project    Project    @relation(fields: [projectId], references: [id])
+}
+
+model StatusHistory {
+  id         String     @id @default(cuid())
+  projectId  String
+  recordType RecordType
+  recordId   String
+  fromStatus String?
+  toStatus   String
+  note       String?
+  actorName  String?
+  createdAt  DateTime   @default(now())
+  project    Project    @relation(fields: [projectId], references: [id])
+}

@@ -1,0 +1,13 @@
+.git
+.next
+.playwright-cli
+.tools
+.vercel
+node_modules
+output
+test-results
+tmp-node.zip
+.env
+.env.local
+.env.production
+.env.preview

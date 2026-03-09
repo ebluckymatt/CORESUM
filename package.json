@@ -1,0 +1,49 @@
+{
+  "name": "htsg-execution-platform",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "test:domain": "tsx tests/domain-smoke.ts",
+    "test:e2e": "powershell -ExecutionPolicy Bypass -File scripts/setup-private-preview.ps1 -InstallDeps && playwright test",
+    "test:qa": "npm run test:domain && npm run test:e2e",
+    "deploy:web:preview": "powershell -ExecutionPolicy Bypass -File scripts/deploy-web-preview.ps1",
+    "deploy:web:production": "powershell -ExecutionPolicy Bypass -File scripts/deploy-web-production.ps1",
+    "web:tunnel": "powershell -ExecutionPolicy Bypass -File scripts/start-web-tunnel.ps1",
+    "web:tunnel:background": "scripts\\start-web-tunnel-background.cmd",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:seed": "node prisma/seed.js",
+    "private:setup": "powershell -ExecutionPolicy Bypass -File scripts/setup-private-preview.ps1",
+    "private:preview": "powershell -ExecutionPolicy Bypass -File scripts/run-private-preview.ps1",
+    "private:background": "scripts\\start-private-preview-background.cmd"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.1004.0",
+    "@aws-sdk/s3-request-presigner": "^3.1004.0",
+    "@prisma/client": "^6.4.1",
+    "@sentry/nextjs": "^10.42.0",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.511.0",
+    "next": "^15.2.0",
+    "next-auth": "^5.0.0-beta.25",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.58.2",
+    "@types/node": "^22.13.10",
+    "@types/react": "^19.0.10",
+    "@types/react-dom": "^19.0.4",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.5.3",
+    "prisma": "^6.4.1",
+    "tailwindcss": "^3.4.17",
+    "tsx": "^4.21.0",
+    "typescript": "^5.8.2"
+  }
+}
